@@ -1,4 +1,4 @@
-# Data Project Template
+# Data Project 
 
 <a target="_blank" href="https://datalumina.com/">
     <img src="https://img.shields.io/badge/Datalumina-Project%20Template-2856f7" alt="Datalumina Project" />
@@ -9,8 +9,7 @@ This project template is a simplified version of the [Cookiecutter Data Science]
 
 ## Adjusting .gitignore
 
-Ensure you adjust the `.gitignore` file according to your project needs. For example, since this is a template, the `/data/` folder is commented out and data will not be exlucded from source control:
-
+Data files are kept private by gitignore
 ```plaintext
 # exclude data from source control by default
 # /data/
