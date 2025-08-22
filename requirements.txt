@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+joblib
+pandas
+openpyxl
+nltk
+matplotlib
+tqdm
+sentence-transformers
+torch           # CPU-only wheel by default
+python-multipart
+charset-normalizer
