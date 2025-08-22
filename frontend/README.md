@@ -1,6 +1,9 @@
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Before npm start run fastAPI server
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
 
 ## Available Scripts
 
@@ -14,11 +17,12 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
-### `npm test`
+Not all the webapplication links are working left for future work 
+Cleaning of data is working when given a certain formated file that is name of columns should be same no matter what data is given 
+Click on visualize and upload provided fileds 
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
+top5_semantic_mappededeka.xlsx
+top5_semantic_mappededeka.xlsx
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
