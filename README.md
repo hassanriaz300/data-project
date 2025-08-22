@@ -17,18 +17,16 @@ Data files are kept private by gitignore
 
 Typically, you want to exclude this folder if it contains either sensitive data that you do not want to add to version control or large files.
 
-## Duplicating the .env File
-To set up your environment variables, you need to duplicate the `.env.example` file and rename it to `.env`. You can do this manually or using the following terminal command:
+## Duplicating the .yaml virtual environment File
+conda env create -f environment.yml to create a virtual environment for project to run
 
-```bash
-cp .env.example .env # Linux, macOS, Git Bash, WSL
-copy .env.example .env # Windows Command Prompt
-```
 
-This command creates a copy of `.env.example` and names it `.env`, allowing you to configure your environment variables specific to your setup.
 
 
 ## Project Organization
+Data folder content are kept hidden intentionally 
+Model work can be done in future
+Notebooks are for testing the working of data analysis code
 
 ```
 ├── LICENSE            <- Open-source license if one is chosen
@@ -41,9 +39,11 @@ This command creates a copy of `.env.example` and names it `.env`, allowing you 
 │
 ├── models             <- Trained and serialized models, model predictions, or model summaries
 │
+|──webapp               <- Webapplication folder built in react detail to run the app can be found in readme in the folder
+
 ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-│                         the creator's initials, and a short `-` delimited description, e.g.
-│                         `1.0-jqp-initial-data-exploration`
+│   ├──edeka.ipynb      Trial and test for data analysis BART model is used here as it consume almost 14 hours so not include in webapp
+│                       
 │
 ├── references         <- Data dictionaries, manuals, and all other explanatory materials
 │
@@ -66,13 +66,15 @@ This command creates a copy of `.env.example` and names it `.env`, allowing you 
     │    
     ├── modeling                
     │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models          
-    │   └── train.py            <- Code to train models
+    │   ├── predict.py          <- Code to run model inference with trained models not worked in this project          
+    │   └── train.py            <- Code to train models not in the scope of this project existing models like BART is used in app code services
     │
     ├── plots.py                <- Code to create visualizations 
     │
     └── services                <- Service classes to connect with external platforms, tools, or APIs
-        └── __init__.py 
-```
-
+        └── __init__.py
+        └── api.py          FastAPI Endpoints for webapplication Ignore all othe files
+        └── visualizationservice.py         Businesslogic for visualizations on web app
+        └── cleaning.py                     Data Cleaning logic
+        └── semanticservice.py              all-mpnet-base-v2 model business logic for semantic matching of review data against accusations 
 --------
