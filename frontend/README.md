@@ -20,9 +20,25 @@ You may also see any lint errors in the console.
 Not all the webapplication links are working left for future work 
 Cleaning of data is working when given a certain formated file that is name of columns should be same no matter what data is given 
 Click on visualize and upload provided fileds 
+Click on text and visualize for deep analysis city wise hotspot maps etc branch wise
+Uploaded files should be 
+top5_semantic_mappededeka.xlsx
+top5_semantic_mappededeka.xlsx
 
+For Cleaning  uploaded files should be in format 
+Edeka.xlsx
+Output processed files save in data/interim/processed/edeka_reviews_wide.xlsx
+
+
+These files are then processed further by facebook BART model and output 
+For Semantic mapping service these files and which can be used to get final visualization and deep analysis
 top5_semantic_mappededeka.xlsx
 top5_semantic_mappededeka.xlsx
+Will be output files
+
+
+
+
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\
