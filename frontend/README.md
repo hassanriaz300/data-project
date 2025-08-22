@@ -17,24 +17,32 @@ Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
 
-Not all the webapplication links are working left for future work 
-Cleaning of data is working when given a certain formated file that is name of columns should be same no matter what data is given 
-Click on visualize and upload provided fileds 
-Click on text and visualize for deep analysis city wise hotspot maps etc branch wise
-Uploaded files should be 
-top5_semantic_mappededeka.xlsx
-top5_semantic_mappededeka.xlsx
+The page will reload when you make changes.\
+You may also see any lint errors in the console.
 
-For Cleaning  uploaded files should be in format 
-Edeka.xlsx
-Output processed files save in data/interim/processed/edeka_reviews_wide.xlsx
+Not all the webapplication links are working left for future work.\
 
+STEP BY STEP Running of Application.\
 
-These files are then processed further by facebook BART model and output 
-For Semantic mapping service these files and which can be used to get final visualization and deep analysis
-top5_semantic_mappededeka.xlsx
-top5_semantic_mappededeka.xlsx
-Will be output files
+Clean service will clean the data for analysis .\
+Input files should be in standard format i.e. name of columns.\
+Edeka.xlsx is provide to user of app for standard.\
+Output files after cleaning are saved as standard. edeka_reviews_wide.xlsx is provided to user of app.\
+
+Facebook BART is used to further process and classify accusations(Seperately done in jypyter notebook because 14-15 hours processing time) .\
+Output file -> edeka_reviews_zero_shot_accusations.xlsx .\
+
+This will be input to :- .\
+Semantic and keyword mapping done to further accurately classify 
+top5_semantic_mappededeka.xlsx.\
+top5_semantic_mappededeka.xlsx.\
+
+Click on visualize or deep analysis and upload provided files e.g top5_semantic_mappededeka.xlsx .\
+
+to analyse and visualize data.\
+
+Different kind of plots can be generated, data set can be drilled down, city wise , branch wise or brand wise analysis can be done.\ 
+Hotspot map is also available using google maps for drilling down further .\
 
 
 
