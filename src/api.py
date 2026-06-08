@@ -1,44 +1,59 @@
-# src/api.py
-import uuid
-import os
+
+# =============================================================================
+# Standard Library Imports
+# =============================================================================
+
 import io
-import joblib
-import yaml
-import pandas as pd
+import os
+import uuid
 from contextlib import asynccontextmanager
 from typing import List, Optional
-from fastapi import UploadFile, File
-from fastapi.responses import JSONResponse
-from src.services.cleaning import prepare_reviews
-from src.services.paths import RAW_DATA_DIR, CLEANED_DIR, SEMANTIC_DIR
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+# =============================================================================
+# Third-Party Imports
+# =============================================================================
+
+import joblib
+import pandas as pd
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
+# =============================================================================
+# Local Application Imports
+# =============================================================================
+
 from src.features import clean_text
-from src.dataset import load_raw_reviews
 from src.services.analysis import enrich_dataframe, load_config
+from src.services.cleaning import prepare_reviews
+from src.services.paths import CLEANED_DIR, RAW_DATA_DIR, SEMANTIC_DIR
 from src.services.semanticservice import map_accusations
-from fastapi.responses import StreamingResponse
-import tempfile
-from src.services.visualizationservice import plot_top10_accusation_heatmap
-from src.services.visualizationservice import plot_top10_by_rank_heatmap
-from src.services.visualizationservice import plot_semantic_topic_heatmap
-from src.services.visualizationservice import plot_top5_accusations
-from src.services.visualizationservice import get_top1_category_trends
-from src.services.visualizationservice import get_store_benchmarks
-from src.services.visualizationservice import compare_accusation_by_group
+from src.services.visualizationservice import (
+    compare_accusation_by_group,
+    deep_analyze_service,
+    get_store_benchmarks,
+    get_top1_category_trends,
+    plot_semantic_topic_heatmap,
+    plot_top10_accusation_heatmap,
+    plot_top10_by_rank_heatmap,
+    plot_top5_accusations,
+)
 
 
-from src.services.visualizationservice import deep_analyze_service
+# =============================================================================
+# Project Paths
+# =============================================================================
 
-
-BASE_DIR = os.path.dirname(__file__)  # …/src
+BASE_DIR = os.path.dirname(__file__)  # .../src
 PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
 BUILD_DIR = os.path.join(PROJECT_DIR, "frontend", "build")
 
+
+# =============================================================================
+# Model Loading
+# =============================================================================
 
 class ModelBundle:
     def __init__(self, path: str):
@@ -54,15 +69,19 @@ model_bundle: ModelBundle
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: load the model bundle
     global model_bundle
+
     try:
         model_bundle = ModelBundle("notebooks/models/multilabel_model.joblib")
     except Exception as e:
         raise RuntimeError(f"Failed to load model: {e}")
-    yield
-    # Shutdown: (nothing special to do)
 
+    yield
+
+
+# =============================================================================
+# FastAPI App Setup
+# =============================================================================
 
 app = FastAPI(
     title="Supermarket Review Classifier",
@@ -71,6 +90,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+# =============================================================================
+# Request / Response Schemas
+# =============================================================================
 
 class PredictRequest(BaseModel):
     texts: List[str]
@@ -88,7 +111,10 @@ class PredictResponse(BaseModel):
     predictions: List[PredictResponseItem]
 
 
-# This endpoint prepares the reviews for classification and returns the cleaned files
+# =============================================================================
+# Data Preparation Routes
+# =============================================================================
+
 @app.post("/prepare")
 async def prepare_endpoint(file: UploadFile = File(...)):
     # Ensure the raw folder exists
@@ -96,6 +122,7 @@ async def prepare_endpoint(file: UploadFile = File(...)):
 
     original_name = file.filename
     raw_path = os.path.join(RAW_DATA_DIR, original_name)
+
     if os.path.exists(raw_path):
         # Append a UUID to the base name, before the extension
         name, ext = os.path.splitext(original_name)
@@ -110,7 +137,7 @@ async def prepare_endpoint(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(500, detail=f"Failed to save uploaded file: {e}")
 
-    # 2) Run your cleaning & splitting service
+    # 2) Run cleaning and splitting service
     try:
         prepare_reviews(input_path=raw_path, out_dir=CLEANED_DIR)
     except Exception as e:
@@ -118,6 +145,7 @@ async def prepare_endpoint(file: UploadFile = File(...)):
 
     # 3) List the generated files
     generated = os.listdir(CLEANED_DIR)
+
     return JSONResponse(
         {
             "detail": "Prepared reviews successfully",
@@ -127,7 +155,10 @@ async def prepare_endpoint(file: UploadFile = File(...)):
     )
 
 
-# This endpoint performs multilabel classification on the provided text future work not implemeted yet
+# =============================================================================
+# Prediction Routes
+# =============================================================================
+
 @app.post("/predict", response_model=PredictResponse)
 def predict(req: PredictRequest):
     if not req.texts:
@@ -139,8 +170,10 @@ def predict(req: PredictRequest):
 
     results = []
     classes = model_bundle.mlb.classes_
+
     for text, row in zip(req.texts, probs):
         sel = [cls for cls, p in zip(classes, row) if p >= req.thresh]
+
         if not sel:
             top_idxs = row.argsort()[::-1][: req.topk]
             sel = [classes[i] for i in top_idxs]
@@ -156,7 +189,10 @@ def predict(req: PredictRequest):
     return PredictResponse(predictions=results)
 
 
-# Endpoint for analysis of uploaded Excel files
+# =============================================================================
+# Analysis Routes
+# =============================================================================
+
 @app.post("/analysis")
 def analysis(
     file: UploadFile = File(...),
@@ -179,33 +215,42 @@ def analysis(
     model_name = model or model_bundle.embedder_name
 
     enriched = enrich_dataframe(df, model_name, labels, keywords, topk)
+
     return enriched.to_dict(orient="records")
 
 
-# Endpoint for semantic mapping of accusations
+# =============================================================================
+# Semantic Mapping Routes
+# =============================================================================
+
 @app.post("/semantic/map")
 async def semantic_map(file: UploadFile = File(...)):
-    # 1.  Persist the raw upload just like /prepare ----------------
+    # 1) Persist the raw upload
     os.makedirs(RAW_DATA_DIR, exist_ok=True)
+
     original = file.filename or "uploaded.xlsx"
     base, ext = os.path.splitext(original)
+
     raw_path = os.path.join(RAW_DATA_DIR, f"{base}_{uuid.uuid4().hex[:8]}{ext}")
+
     with open(raw_path, "wb") as fh:
         fh.write(await file.read())
 
-    # 2.  Choose an output name inside SEMANTIC_DIR ----------------
+    # 2) Choose output name inside SEMANTIC_DIR
     os.makedirs(SEMANTIC_DIR, exist_ok=True)
+
     out_name = f"{base}_mapped_{uuid.uuid4().hex[:6]}.xlsx"
     out_path = os.path.join(SEMANTIC_DIR, out_name)
 
-    # 3.  Run the mapper ------------------------------------------
+    # 3) Run mapper
     try:
         map_accusations(input_path=raw_path, output_path=out_path)
     except Exception as e:
         raise HTTPException(500, f"Semantic mapping failed: {e}")
 
-    # 4.  Respond with the *list* of semantic files ---------------
+    # 4) Respond with list of semantic files
     generated = os.listdir(SEMANTIC_DIR)
+
     return JSONResponse(
         {
             "detail": "Semantic mapping complete",
@@ -215,12 +260,16 @@ async def semantic_map(file: UploadFile = File(...)):
     )
 
 
-# Endpoint for visualization of accusation heatmaps
+# =============================================================================
+# Visualization Routes
+# =============================================================================
+
 @app.post("/visualize")
 async def visualize(file: UploadFile = File(...)):
-    # Save uploaded file to disk
     raw_path = os.path.join("data/raw", f"viz_{uuid.uuid4().hex[:8]}.xlsx")
+
     os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+
     with open(raw_path, "wb") as f:
         f.write(await file.read())
 
@@ -236,12 +285,12 @@ async def visualize(file: UploadFile = File(...)):
     }
 
 
-# Endpoint for various visualizations
 @app.post("/visualize/by-rank")
 async def visualize_by_rank(file: UploadFile = File(...)):
-    # Save uploaded file to disk
     raw_path = os.path.join("data/raw", f"top5rank_{uuid.uuid4().hex[:8]}.xlsx")
+
     os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+
     with open(raw_path, "wb") as f:
         f.write(await file.read())
 
@@ -257,24 +306,20 @@ async def visualize_by_rank(file: UploadFile = File(...)):
     }
 
 
-# Endpoint for semantic topic heatmap visualization
 @app.post("/visualize/semantic")
 async def visualize_semantic(file: UploadFile = File(...)):
-    # 1. Save the upload
     raw_path = os.path.join("data/raw", f"semantic_{uuid.uuid4().hex[:8]}.xlsx")
+
     os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+
     with open(raw_path, "wb") as f:
         f.write(await file.read())
 
-    # 2. Call the new service
     try:
-        from src.services.visualizationservice import plot_semantic_topic_heatmap
-
         result = plot_semantic_topic_heatmap(raw_path)
     except Exception as e:
         raise HTTPException(500, f"Semantic heatmap generation failed: {e}")
 
-    # 3. Return the plot path + data
     return {
         "plot": result["plot"],
         "top10_labels": result["top10_labels"],
@@ -282,11 +327,12 @@ async def visualize_semantic(file: UploadFile = File(...)):
     }
 
 
-#
 @app.post("/visualize/top-accusations")
 async def visualize_top5_accusations(file: UploadFile = File(...)):
     raw = os.path.join("data/raw", f"top5_{uuid.uuid4().hex[:8]}.xlsx")
+
     os.makedirs(os.path.dirname(raw), exist_ok=True)
+
     with open(raw, "wb") as out:
         out.write(await file.read())
 
@@ -295,7 +341,6 @@ async def visualize_top5_accusations(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(500, f"Top-5 accusations failed: {e}")
 
-    fname = os.path.basename(result["plot"])
     return JSONResponse(
         {
             "plot": result["plot"],
@@ -304,71 +349,80 @@ async def visualize_top5_accusations(file: UploadFile = File(...)):
     )
 
 
-# Endpoint for top-1 category trends visualization
 @app.post("/visualize/top1-category-trends")
 async def top1_category_trends(file: UploadFile = File(...)):
     raw_path = f"data/raw/trend_{uuid.uuid4().hex[:8]}.xlsx"
+
     os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+
     with open(raw_path, "wb") as f:
         f.write(await file.read())
+
     try:
         return get_top1_category_trends(raw_path)
     except Exception as e:
         raise HTTPException(500, f"Error generating trends: {e}")
 
 
-#
 @app.post("/visualize/store-benchmarks")
 async def store_benchmarks(file: UploadFile = File(...)):
     raw_path = f"data/raw/bench_{uuid.uuid4().hex[:8]}.xlsx"
+
     os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+
     with open(raw_path, "wb") as f:
         f.write(await file.read())
+
     try:
         return get_store_benchmarks(raw_path)
     except Exception as e:
         raise HTTPException(500, f"Error: {e}")
 
 
-#
 @app.post("/visualize/grouped-breakdown")
 async def visualize_grouped_breakdown(
     file: UploadFile = File(...),
     group_by: str = "city",
-    source: str = "tier",  # can be: "tier", "topk", or "semantic"
+    source: str = "tier",
 ):
     path = os.path.join("data/raw", f"grouped_{uuid.uuid4().hex[:8]}.xlsx")
+
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
     with open(path, "wb") as f:
         f.write(await file.read())
+
     try:
         result = compare_accusation_by_group(path, group_by, source)
     except Exception as e:
         raise HTTPException(400, f"Grouped breakdown failed: {e}")
+
     return result
 
 
-def _save_upload(file: UploadFile) -> str:
-    ext = os.path.splitext(file.filename)[1]
-    path = f"data/raw/tmp_{uuid.uuid4().hex[:8]}{ext}"
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "wb") as out:
-        out.write(file.file.read())
-    return path
-
-
-# This endpoint performs a deep analysis of the uploaded file DeepAnalysis web UI
 @app.post("/visualize/deep-analysis")
 async def deep_analysis(
-    file: UploadFile = File(...), group_by: str = None, group_value: str = None
+    file: UploadFile = File(...),
+    group_by: str = None,
+    group_value: str = None,
 ):
-    # Save uploaded file to disk
     raw_path = os.path.join("data/raw", f"deep_{uuid.uuid4().hex[:8]}.xlsx")
+
     os.makedirs(os.path.dirname(raw_path), exist_ok=True)
+
     with open(raw_path, "wb") as f:
         f.write(await file.read())
+
     result = deep_analyze_service(raw_path, group_by, group_value)
+
     return result
 
 
+# =============================================================================
+# Static Files
+# =============================================================================
+
 app.mount("/static", StaticFiles(directory="data"), name="static")
-#app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="frontend")
+
+
+# app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="frontend")
