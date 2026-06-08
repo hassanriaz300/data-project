@@ -147,8 +147,6 @@ CAT_TO_ACCS: Dict[str, List[str]] = {
     ],
 }
 
-
-----------------------------------------------------------------------
 def _as_list(x):
     if x is None:
         return []
