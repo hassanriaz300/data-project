@@ -15,9 +15,9 @@ from src.features import clean_text
 
 
 def load_config():
-    with open("config/labels.yaml") as f:
+    with open("config/labels.yml") as f:
         labels = yaml.safe_load(f)
-    with open("config/keywords.yaml") as f:
+    with open("config/keywords.yml") as f:
         keywords = yaml.safe_load(f)
     return labels, keywords
 
