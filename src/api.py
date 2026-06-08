@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI):
     # Startup: load the model bundle
     global model_bundle
     try:
-        model_bundle = ModelBundle("models/multilabel_model.joblib")
+        model_bundle = ModelBundle("notebooks/models/multilabel_model.joblib")
     except Exception as e:
         raise RuntimeError(f"Failed to load model: {e}")
     yield
@@ -371,4 +371,4 @@ async def deep_analysis(
 
 
 app.mount("/static", StaticFiles(directory="data"), name="static")
-app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="frontend")
+#app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="frontend")
