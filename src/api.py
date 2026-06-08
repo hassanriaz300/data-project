@@ -112,6 +112,31 @@ class PredictResponse(BaseModel):
 
 
 # =============================================================================
+# Helper Functions
+# =============================================================================
+
+async def save_upload_file(
+    file: UploadFile,
+    prefix: str,
+    upload_dir: str = RAW_DATA_DIR,
+) -> str:
+    os.makedirs(upload_dir, exist_ok=True)
+
+    original_name = file.filename or "uploaded.xlsx"
+    _, ext = os.path.splitext(original_name)
+
+    if not ext:
+        ext = ".xlsx"
+
+    filename = f"{prefix}_{uuid.uuid4().hex[:8]}{ext}"
+    path = os.path.join(upload_dir, filename)
+
+    with open(path, "wb") as out:
+        out.write(await file.read())
+
+    return path
+
+# =============================================================================
 # Data Preparation Routes
 # =============================================================================
 
@@ -264,14 +289,10 @@ async def semantic_map(file: UploadFile = File(...)):
 # Visualization Routes
 # =============================================================================
 
+
 @app.post("/visualize")
 async def visualize(file: UploadFile = File(...)):
-    raw_path = os.path.join("data/raw", f"viz_{uuid.uuid4().hex[:8]}.xlsx")
-
-    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-
-    with open(raw_path, "wb") as f:
-        f.write(await file.read())
+    raw_path = await save_upload_file(file, prefix="viz")
 
     try:
         result = plot_top10_accusation_heatmap(raw_path)
@@ -287,12 +308,7 @@ async def visualize(file: UploadFile = File(...)):
 
 @app.post("/visualize/by-rank")
 async def visualize_by_rank(file: UploadFile = File(...)):
-    raw_path = os.path.join("data/raw", f"top5rank_{uuid.uuid4().hex[:8]}.xlsx")
-
-    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-
-    with open(raw_path, "wb") as f:
-        f.write(await file.read())
+    raw_path = await save_upload_file(file, prefix="top5rank")
 
     try:
         result = plot_top10_by_rank_heatmap(raw_path)
@@ -308,12 +324,7 @@ async def visualize_by_rank(file: UploadFile = File(...)):
 
 @app.post("/visualize/semantic")
 async def visualize_semantic(file: UploadFile = File(...)):
-    raw_path = os.path.join("data/raw", f"semantic_{uuid.uuid4().hex[:8]}.xlsx")
-
-    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-
-    with open(raw_path, "wb") as f:
-        f.write(await file.read())
+    raw_path = await save_upload_file(file, prefix="semantic")
 
     try:
         result = plot_semantic_topic_heatmap(raw_path)
@@ -329,12 +340,7 @@ async def visualize_semantic(file: UploadFile = File(...)):
 
 @app.post("/visualize/top-accusations")
 async def visualize_top5_accusations(file: UploadFile = File(...)):
-    raw = os.path.join("data/raw", f"top5_{uuid.uuid4().hex[:8]}.xlsx")
-
-    os.makedirs(os.path.dirname(raw), exist_ok=True)
-
-    with open(raw, "wb") as out:
-        out.write(await file.read())
+    raw = await save_upload_file(file, prefix="top5")
 
     try:
         result = plot_top5_accusations(raw)
@@ -351,12 +357,7 @@ async def visualize_top5_accusations(file: UploadFile = File(...)):
 
 @app.post("/visualize/top1-category-trends")
 async def top1_category_trends(file: UploadFile = File(...)):
-    raw_path = f"data/raw/trend_{uuid.uuid4().hex[:8]}.xlsx"
-
-    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-
-    with open(raw_path, "wb") as f:
-        f.write(await file.read())
+    raw_path = await save_upload_file(file, prefix="trend")
 
     try:
         return get_top1_category_trends(raw_path)
@@ -366,13 +367,7 @@ async def top1_category_trends(file: UploadFile = File(...)):
 
 @app.post("/visualize/store-benchmarks")
 async def store_benchmarks(file: UploadFile = File(...)):
-    raw_path = f"data/raw/bench_{uuid.uuid4().hex[:8]}.xlsx"
-
-    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-
-    with open(raw_path, "wb") as f:
-        f.write(await file.read())
-
+    raw_path = await save_upload_file(file, prefix="bench")
     try:
         return get_store_benchmarks(raw_path)
     except Exception as e:
@@ -385,12 +380,7 @@ async def visualize_grouped_breakdown(
     group_by: str = "city",
     source: str = "tier",
 ):
-    path = os.path.join("data/raw", f"grouped_{uuid.uuid4().hex[:8]}.xlsx")
-
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-
-    with open(path, "wb") as f:
-        f.write(await file.read())
+    path = await save_upload_file(file, prefix="grouped")
 
     try:
         result = compare_accusation_by_group(path, group_by, source)
@@ -406,13 +396,7 @@ async def deep_analysis(
     group_by: str = None,
     group_value: str = None,
 ):
-    raw_path = os.path.join("data/raw", f"deep_{uuid.uuid4().hex[:8]}.xlsx")
-
-    os.makedirs(os.path.dirname(raw_path), exist_ok=True)
-
-    with open(raw_path, "wb") as f:
-        f.write(await file.read())
-
+    raw_path = await save_upload_file(file, prefix="deep")
     result = deep_analyze_service(raw_path, group_by, group_value)
 
     return result
