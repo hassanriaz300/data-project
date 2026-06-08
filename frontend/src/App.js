@@ -6,7 +6,7 @@ import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/materi
 
 import HomePage from './HomePage';
 import CleaningPage from './CleaningPage';
-import AnalysisPage from './AnalysisPage';
+//import AnalysisPage from './AnalysisPage';
 import PredictPage from './PredictPage';
 import SemanticPage from './semanticpage';
 import VisualizationPage from "./VisualizationPage";
@@ -49,7 +49,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/clean" element={<CleaningPage />} />
-            <Route path="/analysis" element={<AnalysisPage />} />
+            <Route path="/analysis" element={<DeepAnalyze />} />
             <Route path="/predict" element={<PredictPage />} />
             <Route path="/semantic" element={<SemanticPage />} />
             <Route path="/visualize" element={<VisualizationPage />} />
