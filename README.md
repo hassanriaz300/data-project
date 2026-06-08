@@ -1,80 +1,302 @@
-# Data Project 
+# Supermarket Review Analysis Web App
 
-<a target="_blank" href="https://datalumina.com/">
-    <img src="https://img.shields.io/badge/Datalumina-Project%20Template-2856f7" alt="Datalumina Project" />
-</a>
+A full-stack review analysis project for cleaning, analyzing, classifying, and visualizing customer review data from supermarket reviews.
 
-## Cookiecutter Data Science
-This project template is a simplified version of the [Cookiecutter Data Science](https://cookiecutter-data-science.drivendata.org) template, created to suit the needs of Datalumina and made available as a GitHub template.
+The project combines a **React frontend dashboard**, a **FastAPI backend**, and **Python-based review analysis modules** to explore customer complaints, semantic topics, business insights, and review patterns.
 
-## Adjusting .gitignore
+> Current status: The backend and frontend run locally. Core analysis modules are present, while some frontend pages and business logic integrations are still being improved.
 
-Data files are kept private by gitignore
-```plaintext
-# exclude data from source control by default
-# /data/
+---
+
+## Project Overview
+
+Customer reviews often contain valuable information about service quality, product issues, pricing concerns, staff behavior, hygiene, and customer satisfaction. This project aims to turn unstructured review text into useful insights by applying data cleaning, semantic analysis, prediction logic, and dashboard-based visualization.
+
+The application is designed to support:
+
+* Review data cleaning and preprocessing
+* Complaint and topic analysis
+* Semantic review understanding
+* Multi-label review classification
+* Visual exploration of review patterns
+* Business insight generation through dashboards
+
+---
+
+## Tech Stack
+
+### Frontend
+
+* React
+* React Router
+* Material UI
+* JavaScript
+* CSS
+
+### Backend
+
+* FastAPI
+* Uvicorn
+* Python
+
+### Data Analysis / ML
+
+* Pandas
+* scikit-learn
+* Sentence Transformers
+* Joblib
+* YAML configuration
+* WordCloud
+* Matplotlib / visualization utilities
+
+### Project Tools
+
+* Git & GitHub
+* VS Code
+* Python virtual environment
+* npm / Node.js
+
+---
+
+## Repository Structure
+
+```text
+data-project/
+├── frontend/                 # React frontend application
+│   ├── public/
+│   ├── src/
+│   │   ├── App.js
+│   │   ├── HomePage.js
+│   │   ├── CleaningPage.js
+│   │   ├── PredictPage.js
+│   │   ├── semanticpage.js
+│   │   ├── VisualizationPage.js
+│   │   └── DeepAnalyze.js
+│   ├── package.json
+│   └── package-lock.json
+│
+├── src/                      # FastAPI backend and analysis source code
+│   ├── api.py                # Main FastAPI application
+│   ├── services/
+│   │   ├── analysis.py
+│   │   ├── semanticservice.py
+│   │   └── visualizationservice.py
+│   └── modeling/
+│
+├── config/                   # YAML configuration files
+│   ├── keywords.yml
+│   └── labels.yml
+│
+├── notebooks/                # Experiments and modeling notebooks
+│   └── models/
+│       └── multilabel_model.joblib
+│
+├── reports/
+│   └── figures/              # Output images and generated figures
+│
+├── data/                     # Dataset/static data files
+├── backend/app/              # Reserved for future backend refactor
+├── requirements.txt
+└── README.md
 ```
 
-Typically, you want to exclude this folder if it contains either sensitive data that you do not want to add to version control or large files.
+---
 
-## Duplicating the .yaml virtual environment File
-conda env create -f environment.yml to create a virtual environment for project to run
+## Features
 
+### Implemented / Partially Implemented
 
+* React dashboard interface
+* Navigation between dashboard pages
+* FastAPI backend startup
+* Review cleaning workflow
+* Semantic analysis service
+* Multi-label model loading
+* Visualization service
+* YAML-based labels and keyword configuration
+* Static data serving through FastAPI
+* Local frontend and backend development setup
 
+### Pages in the Frontend
 
-## Project Organization
-Data folder content are kept hidden intentionally 
-Model work can be done in future
-Notebooks are for testing the working of data analysis code
+* Home
+* Clean
+* Analysis
+* Predict
+* Semantic
+* Visualize
+* Deep Analysis
 
+Some pages are currently placeholders or partially connected to backend logic. Further work is planned to complete the frontend-to-backend integration.
+
+---
+
+## Backend Setup
+
+Create and activate a Python virtual environment:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 ```
-├── LICENSE            <- Open-source license if one is chosen
-├── README.md          <- The top-level README for developers using this project
-├── data
-│   ├── external       <- Data from third party sources
-│   ├── interim        <- Intermediate data that has been transformed
-│   ├── processed      <- The final, canonical data sets for modeling
-│   └── raw            <- The original, immutable data dump
-│
-├── models             <- Trained and serialized models, model predictions, or model summaries
-│
-|──webapp               <- Webapplication folder built in react detail to run the app can be found in readme in the folder
 
-├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-│   ├──edeka.ipynb      Trial and test for data analysis BART model is used here as it consume almost 14 hours so not include in webapp
-│                       
-│
-├── references         <- Data dictionaries, manuals, and all other explanatory materials
-│
-├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-│   └── figures        <- Generated graphics and figures to be used in reporting
-│
-├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-│                         generated with `pip freeze > requirements.txt`
-│
-└── src                         <- Source code for this project
-    │
-    ├── __init__.py             <- Makes src a Python module
-    │
-    ├── config.py               <- Store useful variables and configuration
-    │
-    ├── dataset.py              <- Scripts to download or generate data
-    │
-    ├── features.py             <- Code to create features for modeling
-    │
-    │    
-    ├── modeling                
-    │   ├── __init__.py 
-    │   ├── predict.py          <- Code to run model inference with trained models not worked in this project          
-    │   └── train.py            <- Code to train models not in the scope of this project existing models like BART is used in app code services
-    │
-    ├── plots.py                <- Code to create visualizations 
-    │
-    └── services                <- Service classes to connect with external platforms, tools, or APIs
-        └── __init__.py
-        └── api.py          FastAPI Endpoints for webapplication Ignore all othe files
-        └── visualizationservice.py         Businesslogic for visualizations on web app
-        └── cleaning.py                     Data Cleaning logic
-        └── semanticservice.py              all-mpnet-base-v2 model business logic for semantic matching of review data against accusations 
---------
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the FastAPI backend:
+
+```bash
+uvicorn src.api:app
+```
+
+Backend API documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Frontend Setup
+
+Go to the frontend folder:
+
+```bash
+cd frontend
+```
+
+Install frontend dependencies:
+
+```bash
+npm install
+```
+
+Start the React development server:
+
+```bash
+npm start
+```
+
+Frontend app:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## Running the Full Application Locally
+
+Use two terminals.
+
+### Terminal 1: Backend
+
+```bash
+cd data-project
+source .venv/bin/activate
+uvicorn src.api:app
+```
+
+### Terminal 2: Frontend
+
+```bash
+cd data-project/frontend
+npm start
+```
+
+Then open:
+
+```text
+Frontend: http://localhost:3000
+Backend Docs: http://127.0.0.1:8000/docs
+```
+
+---
+
+## Recent Fixes and Cleanup
+
+The project structure was cleaned and updated to make the app easier to run and maintain.
+
+Completed updates include:
+
+* Moved YAML configuration files into the `config/` folder
+* Moved generated output figures into `reports/figures/`
+* Fixed a syntax issue in `semanticservice.py`
+* Updated backend config file paths from `.yaml` to `.yml`
+* Installed missing backend dependency for WordCloud
+* Fixed FastAPI model path to load the existing trained model
+* Temporarily disabled production React build mounting during backend development
+* Fixed frontend routing issue for the Analysis page
+* Verified that the FastAPI backend starts locally
+* Verified that the React frontend starts locally
+
+---
+
+## Current Status
+
+The project currently runs locally with:
+
+* FastAPI backend working
+* React frontend working
+* Homepage and navigation available
+* Model file loading from `notebooks/models/multilabel_model.joblib`
+* Config files loading from `config/labels.yml` and `config/keywords.yml`
+
+Some business logic and page integrations are still under development. The project should be considered an active full-stack data analysis project rather than a fully polished production application.
+
+---
+
+## Planned Improvements
+
+Next development steps:
+
+* Complete backend integration for all frontend pages
+* Improve error handling in API endpoints
+* Refactor backend code into a cleaner `backend/app/` structure
+* Add clearer API documentation
+* Improve dashboard design and user experience
+* Add final screenshots to the README
+* Add example input/output for prediction and semantic analysis
+* Add business insights section based on review analysis results
+* Add deployment instructions
+* Add tests for backend services
+
+---
+
+## Example Use Cases
+
+This project can be used to analyze customer review data for questions such as:
+
+* What are the most common supermarket customer complaints?
+* Which topics appear most often in negative reviews?
+* Are complaints related to staff, pricing, hygiene, product quality, or availability?
+* What patterns can be discovered through semantic similarity?
+* How can customer feedback be converted into business insights?
+
+---
+
+## Project Purpose
+
+This project was built as a practical portfolio project to demonstrate skills in:
+
+* Full-stack application development
+* Data cleaning and preprocessing
+* Backend API development
+* Review text analysis
+* Semantic analysis
+* Machine learning model integration
+* Dashboard development
+* GitHub project organization
+
+---
+
+## Author
+
+**Hassan Riaz**
+
+Master's student in Computer & Systems Engineering in Germany, focused on Data Engineering, Analytics, and applied AI.
+
+GitHub: [hassanriaz300](https://github.com/hassanriaz300)
