@@ -6,8 +6,6 @@ import { AppBar, Toolbar, Typography, Button, Container, Box } from '@mui/materi
 
 import HomePage from './HomePage';
 import CleaningPage from './CleaningPage';
-//import AnalysisPage from './AnalysisPage';
-import PredictPage from './PredictPage';
 import SemanticPage from './semanticpage';
 import VisualizationPage from "./VisualizationPage";
 
@@ -30,10 +28,7 @@ export default function App() {
           <Button color="inherit" component={Link} to="/analysis">
             Analysis
           </Button>
-          <Button color="inherit" component={Link} to="/predict">
-            Predict
-          </Button>
-          <Button color="inherit" component={Link} to="/semantic">
+                    <Button color="inherit" component={Link} to="/semantic">
             Semantic
           </Button>
           <Button color="inherit" component={Link} to="/visualize">
@@ -50,7 +45,6 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/clean" element={<CleaningPage />} />
             <Route path="/analysis" element={<DeepAnalyze />} />
-            <Route path="/predict" element={<PredictPage />} />
             <Route path="/semantic" element={<SemanticPage />} />
             <Route path="/visualize" element={<VisualizationPage />} />
             <Route path="/deepanalyze" element={<DeepAnalyze />} />

@@ -12,7 +12,6 @@ export default function HomePage() {
     { to: "/clean", label: "Clean & Split Reviews" },
     { to: "/semantic", label: "Semantic Map (Top-N Accusations)" },
     { to: "/analysis", label: "Run Analysis" },
-    { to: "/predict", label: "Quick Predict" },
     { to: "/visualize", label: "Visualize Data" },
 
     { to: "/deepanalyze", label: "Text & Deep Analysis" },
