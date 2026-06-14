@@ -6,26 +6,26 @@
 import io
 import os
 import uuid
-from contextlib import asynccontextmanager
-from typing import List, Optional
+#from contextlib import asynccontextmanager
+#from typing import List, Optional
 
 # =============================================================================
 # Third-Party Imports
 # =============================================================================
-
-import joblib
+from typing import Optional
+#import joblib
 import pandas as pd
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
+#from pydantic import BaseModel
+#from sentence_transformers import SentenceTransformer
 
 # =============================================================================
 # Local Application Imports
 # =============================================================================
 
-from src.features import clean_text
+#from src.features import clean_text
 from src.services.analysis import enrich_dataframe, load_config
 from src.services.cleaning import prepare_reviews
 from src.services.paths import CLEANED_DIR, DATA_DIR, RAW_DATA_DIR, SEMANTIC_DIR
@@ -50,65 +50,15 @@ BASE_DIR = os.path.dirname(__file__)  # .../src
 PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
 BUILD_DIR = os.path.join(PROJECT_DIR, "frontend", "build")
 
-
-# =============================================================================
-# Model Loading
-# =============================================================================
-
-class ModelBundle:
-    def __init__(self, path: str):
-        bundle = joblib.load(path)
-        self.embedder_name = bundle["embedder_name"]
-        self.mlb = bundle["mlb"]
-        self.clf = bundle["clf"]
-        self.embedder = SentenceTransformer(self.embedder_name)
-
-
-model_bundle: ModelBundle
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global model_bundle
-
-    try:
-        model_bundle = ModelBundle("notebooks/models/multilabel_model.joblib")
-    except Exception as e:
-        raise RuntimeError(f"Failed to load model: {e}")
-
-    yield
-
-
 # =============================================================================
 # FastAPI App Setup
 # =============================================================================
 
 app = FastAPI(
-    title="Supermarket Review Classifier",
-    description="Multilabel classification & analysis of customer reviews",
+    title="Supermarket Review Analysis API",
+    description="Cleaning, semantic mapping, and visualization of customer reviews",
     version="1.0.0",
-    lifespan=lifespan,
 )
-
-
-# =============================================================================
-# Request / Response Schemas
-# =============================================================================
-
-class PredictRequest(BaseModel):
-    texts: List[str]
-    thresh: Optional[float] = 0.5
-    topk: Optional[int] = 3
-
-
-class PredictResponseItem(BaseModel):
-    text: str
-    scores: dict
-    predicted: List[str]
-
-
-class PredictResponse(BaseModel):
-    predictions: List[PredictResponseItem]
 
 
 # =============================================================================
@@ -180,38 +130,6 @@ async def prepare_endpoint(file: UploadFile = File(...)):
     )
 
 
-# =============================================================================
-# Prediction Routes
-# =============================================================================
-
-@app.post("/predict", response_model=PredictResponse)
-def predict(req: PredictRequest):
-    if not req.texts:
-        raise HTTPException(status_code=400, detail="No texts provided")
-
-    cleaned = [clean_text(t) for t in req.texts]
-    embeds = model_bundle.embedder.encode(cleaned, convert_to_tensor=False)
-    probs = model_bundle.clf.predict_proba(embeds)
-
-    results = []
-    classes = model_bundle.mlb.classes_
-
-    for text, row in zip(req.texts, probs):
-        sel = [cls for cls, p in zip(classes, row) if p >= req.thresh]
-
-        if not sel:
-            top_idxs = row.argsort()[::-1][: req.topk]
-            sel = [classes[i] for i in top_idxs]
-
-        results.append(
-            PredictResponseItem(
-                text=text,
-                scores={cls: float(p) for cls, p in zip(classes, row)},
-                predicted=sel,
-            )
-        )
-
-    return PredictResponse(predictions=results)
 
 
 # =============================================================================
@@ -237,9 +155,8 @@ def analysis(
     )
 
     labels, keywords = load_config()
-    model_name = model or model_bundle.embedder_name
 
-    enriched = enrich_dataframe(df, model_name, labels, keywords, topk)
+    enriched = enrich_dataframe(df, model, labels, keywords, topk)
 
     return enriched.to_dict(orient="records")
 
