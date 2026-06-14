@@ -1,0 +1,164 @@
+# =============================================================================
+# Standard Library Imports
+# =============================================================================
+import os
+import uuid
+
+# =============================================================================
+# Third-Party Imports
+# =============================================================================
+from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
+
+# =============================================================================
+# Local Application Imports
+# =============================================================================
+from src.services.paths import RAW_DATA_DIR
+from src.services.visualizationservice import (
+    compare_accusation_by_group,
+    deep_analyze_service,
+    get_store_benchmarks,
+    get_top1_category_trends,
+    plot_semantic_topic_heatmap,
+    plot_top10_accusation_heatmap,
+    plot_top10_by_rank_heatmap,
+    plot_top5_accusations,
+)
+
+
+router = APIRouter()
+
+
+async def save_upload_file(
+    file: UploadFile,
+    prefix: str,
+    upload_dir: str = RAW_DATA_DIR,
+) -> str:
+    os.makedirs(upload_dir, exist_ok=True)
+
+    original_name = file.filename or "uploaded.xlsx"
+    _, ext = os.path.splitext(original_name)
+
+    if not ext:
+        ext = ".xlsx"
+
+    filename = f"{prefix}_{uuid.uuid4().hex[:8]}{ext}"
+    path = os.path.join(upload_dir, filename)
+
+    with open(path, "wb") as out:
+        out.write(await file.read())
+
+    return path
+
+
+@router.post("/visualize")
+async def visualize(file: UploadFile = File(...)):
+    raw_path = await save_upload_file(file, prefix="viz")
+
+    try:
+        result = plot_top10_accusation_heatmap(raw_path)
+    except Exception as e:
+        raise HTTPException(500, f"Visualization failed: {e}")
+
+    return {
+        "plot": result["plot"],
+        "top10_labels": result["top10_labels"],
+        "data_table": result["data_table"],
+    }
+
+
+@router.post("/visualize/by-rank")
+async def visualize_by_rank(file: UploadFile = File(...)):
+    raw_path = await save_upload_file(file, prefix="top5rank")
+
+    try:
+        result = plot_top10_by_rank_heatmap(raw_path)
+    except Exception as e:
+        raise HTTPException(500, f"Rank-based visualization failed: {e}")
+
+    return {
+        "plot": result["plot"],
+        "top10_labels": result["top10_labels"],
+        "data_table": result["data_table"],
+    }
+
+
+@router.post("/visualize/semantic")
+async def visualize_semantic(file: UploadFile = File(...)):
+    raw_path = await save_upload_file(file, prefix="semantic")
+
+    try:
+        result = plot_semantic_topic_heatmap(raw_path)
+    except Exception as e:
+        raise HTTPException(500, f"Semantic heatmap generation failed: {e}")
+
+    return {
+        "plot": result["plot"],
+        "top10_labels": result["top10_labels"],
+        "data_table": result["data_table"],
+    }
+
+
+@router.post("/visualize/top-accusations")
+async def visualize_top5_accusations(file: UploadFile = File(...)):
+    raw = await save_upload_file(file, prefix="top5")
+
+    try:
+        result = plot_top5_accusations(raw)
+    except Exception as e:
+        raise HTTPException(500, f"Top-5 accusations failed: {e}")
+
+    return JSONResponse(
+        {
+            "plot": result["plot"],
+            "data_table": result["data_table"],
+        }
+    )
+
+
+@router.post("/visualize/top1-category-trends")
+async def top1_category_trends(file: UploadFile = File(...)):
+    raw_path = await save_upload_file(file, prefix="trend")
+
+    try:
+        return get_top1_category_trends(raw_path)
+    except Exception as e:
+        raise HTTPException(500, f"Error generating trends: {e}")
+
+
+@router.post("/visualize/store-benchmarks")
+async def store_benchmarks(file: UploadFile = File(...)):
+    raw_path = await save_upload_file(file, prefix="bench")
+
+    try:
+        return get_store_benchmarks(raw_path)
+    except Exception as e:
+        raise HTTPException(500, f"Error: {e}")
+
+
+@router.post("/visualize/grouped-breakdown")
+async def visualize_grouped_breakdown(
+    file: UploadFile = File(...),
+    group_by: str = "city",
+    source: str = "tier",
+):
+    path = await save_upload_file(file, prefix="grouped")
+
+    try:
+        result = compare_accusation_by_group(path, group_by, source)
+    except Exception as e:
+        raise HTTPException(400, f"Grouped breakdown failed: {e}")
+
+    return result
+
+
+@router.post("/visualize/deep-analysis")
+async def deep_analysis(
+    file: UploadFile = File(...),
+    group_by: str = None,
+    group_value: str = None,
+):
+    raw_path = await save_upload_file(file, prefix="deep")
+    result = deep_analyze_service(raw_path, group_by, group_value)
+
+    return result
