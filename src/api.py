@@ -3,30 +3,18 @@
 # Standard Library Imports
 # =============================================================================
 
-import io
 import os
 import uuid
-#from contextlib import asynccontextmanager
-#from typing import List, Optional
 
 # =============================================================================
 # Third-Party Imports
 # =============================================================================
-from typing import Optional
-#import joblib
-import pandas as pd
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-#from pydantic import BaseModel
-#from sentence_transformers import SentenceTransformer
-
 # =============================================================================
 # Local Application Imports
 # =============================================================================
-
-#from src.features import clean_text
-from src.services.analysis import enrich_dataframe, load_config
 from src.services.cleaning import prepare_reviews
 from src.services.paths import CLEANED_DIR, DATA_DIR, RAW_DATA_DIR, SEMANTIC_DIR
 from src.services.semanticservice import map_accusations
@@ -130,35 +118,6 @@ async def prepare_endpoint(file: UploadFile = File(...)):
     )
 
 
-
-
-# =============================================================================
-# Analysis Routes
-# =============================================================================
-
-@app.post("/analysis")
-def analysis(
-    file: UploadFile = File(...),
-    model: Optional[str] = None,
-    topk: Optional[int] = 3,
-):
-    try:
-        content = file.file.read()
-        df = pd.read_excel(io.BytesIO(content))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Excel file: {e}")
-
-    df["true_accusations"] = df["accusations"].apply(
-        lambda x: x
-        if isinstance(x, list)
-        else (__import__("ast").literal_eval(x) if isinstance(x, str) else [])
-    )
-
-    labels, keywords = load_config()
-
-    enriched = enrich_dataframe(df, model, labels, keywords, topk)
-
-    return enriched.to_dict(orient="records")
 
 
 # =============================================================================
