@@ -29,15 +29,6 @@ from src.services.visualizationservice import (
     plot_top5_accusations,
 )
 
-
-# =============================================================================
-# Project Paths
-# =============================================================================
-
-BASE_DIR = os.path.dirname(__file__)  # .../src
-PROJECT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
-BUILD_DIR = os.path.join(PROJECT_DIR, "frontend", "build")
-
 # =============================================================================
 # FastAPI App Setup
 # =============================================================================
@@ -283,6 +274,3 @@ async def deep_analysis(
 # =============================================================================
 
 app.mount("/static", StaticFiles(directory=DATA_DIR), name="static")
-
-
-# app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="frontend")
