@@ -28,7 +28,7 @@ from sentence_transformers import SentenceTransformer
 from src.features import clean_text
 from src.services.analysis import enrich_dataframe, load_config
 from src.services.cleaning import prepare_reviews
-from src.services.paths import CLEANED_DIR, RAW_DATA_DIR, SEMANTIC_DIR
+from src.services.paths import CLEANED_DIR, DATA_DIR, RAW_DATA_DIR, SEMANTIC_DIR
 from src.services.semanticservice import map_accusations
 from src.services.visualizationservice import (
     compare_accusation_by_group,
@@ -406,7 +406,7 @@ async def deep_analysis(
 # Static Files
 # =============================================================================
 
-app.mount("/static", StaticFiles(directory="data"), name="static")
+app.mount("/static", StaticFiles(directory=DATA_DIR), name="static")
 
 
 # app.mount("/", StaticFiles(directory=BUILD_DIR, html=True), name="frontend")
